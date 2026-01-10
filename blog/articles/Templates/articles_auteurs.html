@@ -1,0 +1,12 @@
+{% extends 'base.html' %}
+
+{% block title %}
+  <title>All Articles and thier Authors Page</title>
+{% endblock %}
+
+{% for info in infos %}
+  <p>Username : {{ info.auteur.username}}</p>
+  <p>Email : {{ info.auteur.email}}</p>
+  <p>Titre : {{ info.titre}}</p>
+  <p>Date de Publication : {{ info.date_publication}}</p>
+{% endfor %}
