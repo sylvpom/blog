@@ -2,7 +2,7 @@ databases:
   - name: blog-database
     plan: free
     databaseName: blog-database
-    user: adacorp
+    user: adacorp 
 
 services:
   - type: web
