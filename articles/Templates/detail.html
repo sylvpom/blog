@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+{% block title %}
+  <title>Details Page</title>
+{% endblock %}
+
+{% block content %}
+  <h1>Details page</h1>
+  <h4>Titre : {{ article_details.titre }}</h2>
+  <p><span>Ecrit par : {{ article_details.auteur.username }}</span></p>
+  <p><i>Date de publication : {{ article_details.date_publication }}</i></p>
+  <p>
+    {{ article_details.contenu}}
+  </p>
+
+  
+  <h3>Liste de commentaires</h3>
+  <!-- if one or many articles exists then display-->
+  {% if article_details.commentaire_set.all%}
+    {% for comment in article_details.commentaire_set.all %}
+      <p>{{ comment.name}} : {{ comment.contenu}} </p>
+    {% endfor %}
+  {% else %}<!-- if no articles exists then display-->
+    <p>Pas de commentaire pour le moment!</p>
+  {% endif %}  
+  <h2>Ajout de commentaire</h2>
+  <form method="POST" 
+        action="{% url 'article-comments' pk=article_details.id %}">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <input type="submit" value="Envoyer">
+  </form>
+{% endblock%}
