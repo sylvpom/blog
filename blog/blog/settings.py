@@ -12,26 +12,28 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 
 from pathlib import Path
 import os
+import environ
+import dj_database_url
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+env_file = BASE_DIR / ".env"
+if env_file.exists():
+    environ.Env.read_env(env_file)
+
+env = environ.Env()
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-#SECRET_KEY = 'django-insecure-5jyk^k&!e%exv+f8=+2%ke%d=&wz3^zj2)lhb&g)7id4sh3!g7'
-SECRET_KEY = os.getenv('SECRET_KEY')
-
+SECRET_KEY = env('SECRET_KEY', default='mysecretkey')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-#DEBUG = True
-DEBUG = False
+DEBUG = env('DEBUG', default=True)
 
-#ALLOWED_HOSTS = ["herokuapp.com"]
-ALLOWED_HOSTS = ["localhost","blog.herokuapp.com","blog-sylvainbootcamp2026.onrender.com"]
-#blog-sylvainbootcamp2026 is your application name on render.com
+ALLOWED_HOSTS = ["127.0.0.1","localhost","*.herokuapp.com", ".onrender.com"]
 
 
 # Application definition
@@ -42,7 +44,7 @@ INSTALLED_APPS = [
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
-    'whitenoise.runserver_nostatic',
+    "whitenoise.runserver_nostatic", 
     'django.contrib.staticfiles',
     'rest_framework',
     'articles',
@@ -51,33 +53,34 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
-    'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'whitenoise.middleware.whiteNoiseMiddleware'
-
+    'django.middleware.clickjacking.XFrameOptionsMiddleware'
 ]
-#'whitenoise.middleware.whiteNoiseMiddleware' pour gerer nos fichiers statique
-STORAGES = {
-  'staticfiles':{
-    "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage"
-  }
-}
 
+# STORAGES = {
+#     'staticfiles': {
+#         "BACKEND":"whitenoise.storage.CompressedManifestStaticFilesStorage"
+#     }
+# }
 
+# CACHES = {
+#     'default': {
+#         'BACKEND': 'django.core.cache.backends.memcached.MemcachedCache',
+#         'LOCATION': '127.0.0.1:11211',
+#     }
+# }
 CACHES = {
     'default': {
-        #on render.com
         'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
-        #on render.com
         'LOCATION': 'unique-blog-cache',
-        #'BACKEND': 'django.core.cache.backends.memcached.MemcachedCache',
-        #'LOCATION': '127.0.0.1:11211',
     }
 }
+
 
 ROOT_URLCONF = 'blog.urls'
 
@@ -98,48 +101,33 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'blog.wsgi.application'
 
-
 CSRF_TRUSTED_ORIGINS = [
     "https://*.onrender.com",
     "https://*.herokuapp.com",
 ]
 
-
 # Database
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
-
-"""""
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
-}"""
-
 
 #Configs for PostgreSQL
 # DATABASES = {
 #     'default': {
 #         'ENGINE': 'django.db.backends.postgresql',
-#         'NAME' : os.getenv("DB_NAME"),
-#         'USER': os.getenv("DB_USER"),
-#         'PASSWORD' : os.getenv("DB_PASSWORD"),
-#         'HOST' : os.getenv("DB_HOST"),
-#         'PORT' : os.getenv("DB_PORT")
+#         'NAME' : env("DB_NAME"),
+#         'USER': env("DB_USER"),
+#         'PASSWORD' : env("DB_PASSWORD"),
+#         'HOST' : env("DB_HOST"),
+#         'PORT' : env("DB_PORT")
 #     }
 # }
 
-#Configs for Render 
-import dj_database_url
-
 DATABASES = {
     "default": dj_database_url.config(
-        default=os.getenv("DATABASE_URL", f"sqlite:///{BASE_DIR / 'db.sqlite3'}"),
+        default=env("DATABASE_URL",default= f"sqlite:///{BASE_DIR / 'db.sqlite3'}"),
         conn_max_age=600,
-        ssl_require=bool(os.getenv("RENDER")),  # True en prod Render
+        # ssl_require=bool(env("RENDER" , default=False)),  # True en prod Render
     )
 }
-
 
 REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
@@ -150,8 +138,6 @@ REST_FRAMEWORK = {
     'rest_framework.authentication.BasicAuthentication',
     ],
 }
-
-
 # Password validation
 # https://docs.djangoproject.com/en/6.0/ref/settings/#auth-password-validators
 
@@ -169,7 +155,6 @@ AUTH_PASSWORD_VALIDATORS = [
         'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
     },
 ]
-
 
 LOGGING = {
     'version': 1,
@@ -190,7 +175,6 @@ LOGGING = {
     },
 }
 
-
 # Internationalization
 # https://docs.djangoproject.com/en/6.0/topics/i18n/
 
@@ -207,24 +191,22 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
 STATIC_URL = '/static/'
-#added static root
-STATIC_ROOT = BASE_DIR / 'staticfiles'
 
-#stores all media url
+
 MEDIA_URL = '/media/'
-#stores all media files in this
 MEDIA_ROOT = BASE_DIR / 'media'
 
-#added with the user app
-#when a user is logged in
-#we redirect to the home page
 LOGIN_REDIRECT_URL = "home"
+LOGOUT_REDIRECT_URL = "users:login"
 
-#added with the user app
-#since logout does not have a template
-#we redirect to the login page
-LOGOUT_REDIRECT_URL = "user:login"
+# This production code might break development mode, so we check whether we're in DEBUG mode
+if not DEBUG:
+    # Tell Django to copy static assets into a path called `staticfiles` (this is specific to Render)
+    STATIC_ROOT = BASE_DIR / 'staticfiles'
 
-#Config Https
-SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
-SECURE_SSL_REDIRECT = not DEBUG
+    # Enable the WhiteNoise storage backend, which compresses static files to reduce disk use
+    # and renames the files with unique names for each version to support long-term caching
+    STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+    #Config Https
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+    SECURE_SSL_REDIRECT = not DEBUG
